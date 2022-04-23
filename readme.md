@@ -15,3 +15,32 @@ rewirte [CppDB: CppDB - SQL Connectivity Library](http://cppcms.com/sql/cppdb/in
 │   └── mysql_backend.cpp
 └── tests
 ```
+
+
+## 代码架构
+
+```
+query<static_str,Result<>>
+       │
+       │                         ┌───────────┐
+       │                         │           │
+       │                         │           │
+       │       exec              │   pool    │
+       └────────────────────────►│           │
+                                 │           │
+                                 └──┬────▲───┘
+                                    │    │
+                                    │    │
+                                    │    │
+                            shared_ptr   │
+                                    │    │
+                                    │  weak_ptr
+                                    │    │                           ┌──────────────────────┐
+                                    │    │                           │                      │
+                                    ▼    │                           │ backend::connection  │
+                                   connect_class ───────────────────►│                      │
+                                                    encapsulate      │                      │
+                                                                     │ backend::result      │
+                                                                     │                      │
+                                                                     └──────────────────────┘
+```

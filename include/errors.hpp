@@ -1,6 +1,7 @@
 #pragma once
 
-#include <exception>
+//#include <exception>
+#include <stdexcept>
 
 namespace cppdb {
 
