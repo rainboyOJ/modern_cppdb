@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <cstring>
+#include <mutex>
 #include <chrono>
 #include <cxxabi.h>
 
@@ -169,6 +170,27 @@ namespace cppdb {
             }
         }
     } //
+
+
+struct LOG {
+public:
+    template<typename... T>
+    static void log(T&&... args){
+        std::lock_guard<std::mutex> lck(mtx_);
+        ( (std::cout << args << " "),...) << '\n';
+    }
+private:
+    static std::mutex mtx_;
+};
+
+std::mutex LOG::mtx_;
+
+#ifdef DEBUG
+    #define log(...) LOG::log(__FILE__,__LINE__,__VA_ARGS__)
+#else
+    #define log(...)
+#endif
+
 
 } // end namespace cppdb
 

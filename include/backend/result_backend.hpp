@@ -25,6 +25,7 @@ public:
     result() = delete;
     result(MYSQL *conn);
     result(connection & mysql_conn_);
+    result(connection * mysql_conn_);
     ~result();
 
     //下一行是否存在
@@ -75,6 +76,10 @@ result::result(MYSQL *conn) : res_(0), cols_(0), current_row_(0), row_(0)
 
 result::result(connection & mysql_conn_)
     :result(mysql_conn_.get_raw_conn())
+{}
+
+result::result(connection * mysql_conn_)
+    :result(mysql_conn_->get_raw_conn())
 {}
 
 result::~result() {
