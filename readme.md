@@ -44,3 +44,8 @@ query<static_str,Result<>>
                                                                      │                      │
                                                                      └──────────────────────┘
 ```
+
+
+column->row(递归类) -> index->schema(结果集)
+
+query<command_str,schema>
