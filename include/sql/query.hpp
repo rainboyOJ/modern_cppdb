@@ -11,6 +11,9 @@
 #include "cexpr/string.hpp"
 #include "sql/schema.hpp"
 
+#include "errors.hpp"
+#include "utils.hpp"
+
 
 
 namespace cppdb
@@ -51,6 +54,15 @@ struct GET_STR_QUESTION_MARK_SEQ {
 
 };
 
+template<typename T>
+static constexpr std::size_t get_mark_size(T & s){
+    int cnt{0};
+    auto b = s.cbegin();
+    auto e = s.cend();
+    for( ; b!= e; b++)
+        if(*b == '?') cnt++;
+    return cnt;
+}
 /**
  * schema 的类型有三种
  * int,std::string,单个类型
@@ -60,41 +72,42 @@ struct GET_STR_QUESTION_MARK_SEQ {
 template <cexpr::string Str, typename Schema>
 class query {
 public:
-    
-    constexpr query(std::string_view qstr)
-        :query_str_{qstr},mark_size_{get_mark_size(qstr)}
+    using binders_seq = typename GET_STR_QUESTION_MARK_SEQ<Str>::index_seq;
+
+    static constexpr auto query_str_ {Str};
+    static constexpr std::size_t mark_size_ {get_mark_size(Str)};
+
+    constexpr query()
     {
-        params_.reserve(mark_size_);
-        binders_.reserve(mark_size_);
     }
 
     constexpr auto params_size() const { return mark_size_; }
 
     template<typename Input>
-    query& operator<<(Input && in){
+    query& operator<<(Input && in) {
         bind(std::forward<Input>(in));
-        return this;
+        return *this;
     }
 
     void reset(){
         cols = 0;
-        params_.clear();
-        params_.resize(mark_size_);
+        for (auto& e : params_) e.clear();
     }
 
-    auto operator<<(__exec const &) const{
+    auto operator<<(__exec const &) {
+        //TODO 执行 得到 backend::result 继续填充schema
         return this->exec();
     }
 
-    std::string & at(int col) const{
+    std::string & at(int col) {
         if(col < mark_size_)
             return params_[col];
         else
-            throw invalid_column( "overload cols size :" + std::to_string(mark_size_));
+            throw cppdb_error( "overload cols size :" + std::to_string(mark_size_));
     }
 
     template<typename Input>
-    void bind(Input&& in) const{
+    void bind(Input&& in) {
         using TYPE = typename std::remove_const_t< std::remove_cv_t<Input> >;
         if constexpr ( std::is_fundamental_v<TYPE> && (! std::is_same_v<TYPE, char *>)  ) // # 基础的类型
         {
@@ -134,26 +147,20 @@ public:
         throw std::invalid_argument(std::string("Do not supporte type!") + typeid(Input).name());
     }
 
-    auto exec() const{
+    auto exec() {
+        if( cols != mark_size_)
+            throw cppdb_error("must insert full value_ use << ");
+
         return "123";
     }
 
 
 private:
-    constexpr int get_mark_size(std::string_view s){
-        int cnt{0};
-        for (const auto& e : s) {
-            if(e == '?' ) cnt++;
-        }
-        return cnt;
-    }
 
-    mutable std::vector<std::string> params_;
-    mutable std::vector<std::size_t> binders_;
-    // std::intger_sequece()
-    mutable int cols{0};
-    const   int mark_size_;
-    std::string_view query_str_;
+    //mutable std::vector<std::string> params_;
+    //std::array<std::string, mark_size_> params_;
+    std::string params_[mark_size_];
+    int cols{0}; //当前存的数据的行数
 
 };
 

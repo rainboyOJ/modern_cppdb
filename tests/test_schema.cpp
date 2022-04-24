@@ -5,6 +5,7 @@
 #include "sql/schema.hpp"
 #include "utils.hpp"
 
+namespace  sql = cppdb;
 
 template<typename T>
 void print(const T & a){
