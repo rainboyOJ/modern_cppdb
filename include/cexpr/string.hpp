@@ -33,6 +33,11 @@ namespace cexpr
             }
         }
 
+        //template<std::size_t pos>
+        constexpr Char get(std::size_t pos) const{
+            return string_[pos];
+        }
+
         constexpr string(std::basic_string_view<Char> const& s) noexcept : string{}
         {
             if (s.length() < N)

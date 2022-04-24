@@ -7,7 +7,7 @@
 #include "cexpr/string.hpp"
 #include "column.hpp"
 
-namespace sql
+namespace cppdb
 {
 
     struct void_row
@@ -84,7 +84,7 @@ namespace sql
     template <cexpr::string Name, typename Row>
     constexpr auto const& get(Row const& r) noexcept
     {
-        static_assert(!std::is_same_v<Row, sql::void_row>, "Name does not match a column name.");
+        static_assert(!std::is_same_v<Row, cppdb::void_row>, "Name does not match a column name.");
 
         if constexpr (Row::column::name == Name)
         {
@@ -116,7 +116,7 @@ namespace sql
     template <cexpr::string Name, typename Row, typename Type>
     constexpr void set(Row& r, Type const& value)
     {
-        static_assert(!std::is_same_v<Row, sql::void_row>, "Name does not match a column name.");
+        static_assert(!std::is_same_v<Row, cppdb::void_row>, "Name does not match a column name.");
 
         if constexpr (Row::column::name == Name)
         {
@@ -145,38 +145,38 @@ namespace sql
     struct row_element;
 
     template <size_t Index, typename Col, typename Next>
-    struct row_element<Index,sql::row<Col,Next>> 
+    struct row_element<Index,cppdb::row<Col,Next>> 
     {
         template<size_t Pos,typename Col_, typename Next_>
-        static constexpr auto __type(sql::row<Col_,Next_>) {
+        static constexpr auto __type(cppdb::row<Col_,Next_>) {
             if constexpr (Pos == 0)
                 return Col_{};
             else
                 return __type<Pos-1>(Next_{});
         }
-        using type = decltype(__type<Index>(sql::row<Col, Next>{}));
+        using type = decltype(__type<Index>(cppdb::row<Col, Next>{}));
     };
 
-} // namespace sql
+} // namespace cppdb
 
 // STL injections to allow row to be used in structured binding declarations
 namespace std
 {
 
     template <typename Col, typename Next>
-    class tuple_size<sql::row<Col, Next>> : public integral_constant<size_t, sql::row<Col, Next>::depth>
+    class tuple_size<cppdb::row<Col, Next>> : public integral_constant<size_t, cppdb::row<Col, Next>::depth>
     {};
 
     template <size_t Index, typename Col, typename Next>
-    struct tuple_element<Index, sql::row<Col, Next>>
+    struct tuple_element<Index, cppdb::row<Col, Next>>
     {
-        using type = decltype(sql::get<Index>(sql::row<Col, Next>{}));
+        using type = decltype(cppdb::get<Index>(cppdb::row<Col, Next>{}));
     };
 
 
 } // namespace std
 
-namespace sql {
+namespace cppdb {
 
 // 是否是row 类型
 template<typename T>

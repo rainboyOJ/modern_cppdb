@@ -11,7 +11,7 @@
 #include "sql/column.hpp"
 #include "sql/row.hpp"
 
-namespace sql
+namespace cppdb
 {
 
     template <cexpr::string Name, typename... Cols>
@@ -20,7 +20,7 @@ namespace sql
     public:
         static constexpr auto name{ Name };
 
-        using row_type       = typename sql::variadic_row<Cols...>::row_type;
+        using row_type       = typename cppdb::variadic_row<Cols...>::row_type;
         using container      = std::vector<row_type>;
         using const_iterator = typename container::const_iterator;
         
@@ -102,11 +102,11 @@ namespace sql
         template <typename Row>
         void fill(std::fstream& fstr, Row& row, [[maybe_unused]] char delim)
         {
-            if constexpr (!std::is_same_v<Row, sql::void_row>)
+            if constexpr (!std::is_same_v<Row, cppdb::void_row>)
             {
                 if constexpr (std::is_same_v<typename Row::column::type, std::string>)
                 {
-                    if constexpr (std::is_same_v<typename Row::next, sql::void_row>)
+                    if constexpr (std::is_same_v<typename Row::next, cppdb::void_row>)
                     {
                         std::getline(fstr, row.head());
                     }
@@ -127,11 +127,11 @@ namespace sql
         template <typename Row>
         void fill(std::fstream& fstr, Row const& row, char delim)
         {
-            if constexpr (!std::is_same_v<Row, sql::void_row>)
+            if constexpr (!std::is_same_v<Row, cppdb::void_row>)
             {
                 fstr << row.head();
 
-                if constexpr (std::is_same_v<typename Row::next, sql::void_row>)
+                if constexpr (std::is_same_v<typename Row::next, cppdb::void_row>)
                 {
                     fstr << '\n';
                 }
@@ -159,4 +159,4 @@ namespace sql
     template <cexpr::string Name, typename... Cols>
     using Result = schema<Name,Cols...>;
 
-} // namespace sql
+} // namespace cppdb

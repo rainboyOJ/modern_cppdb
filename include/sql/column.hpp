@@ -2,7 +2,7 @@
 
 #include "cexpr/string.hpp"
 
-namespace sql
+namespace cppdb
 {
 
     template <cexpr::string Name, typename Type>

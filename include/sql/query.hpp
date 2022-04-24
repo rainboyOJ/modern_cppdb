@@ -7,20 +7,49 @@
 #include <type_traits>
 #include <vector>
 
-#include "cexpr/string.hpp"
-
 #include "pool_manager.hpp"
+#include "cexpr/string.hpp"
+#include "sql/schema.hpp"
 
-//#include "sql/column.hpp"
-//#include "sql/tokens.hpp"
-//#include "sql/predicate.hpp"
-//#include "sql/row.hpp"
+
 
 namespace cppdb
 {
 
 struct __exec {};
 const constexpr auto exec = __exec();
+
+
+template<std::size_t... As,std::size_t... Bs>
+constexpr auto operator+(std::index_sequence<As...>,std::index_sequence<Bs...>) 
+    -> std::index_sequence<As...,Bs...>
+{ return {}; }
+
+template<cexpr::string str>
+struct GET_STR_QUESTION_MARK_SEQ {
+    static constexpr auto S {str};
+    static constexpr std::size_t size__ = S.size();
+
+    static constexpr auto get()
+    {
+        return  filter(std::make_index_sequence<size__>{});
+    }
+
+    template<std::size_t... Is>
+    static constexpr auto filter(std::index_sequence<Is...>){
+        return (filter_single<Is>()  + ...);
+    }
+
+    template <std::size_t Val>
+    static constexpr auto filter_single() {
+        if constexpr ( S.get(Val) == '?')
+            return std::index_sequence<Val> {};
+        else
+            return std::index_sequence<> {};
+    }
+    using index_seq = decltype(get());
+
+};
 
 /**
  * schema 的类型有三种
@@ -109,6 +138,7 @@ public:
         return "123";
     }
 
+
 private:
     constexpr int get_mark_size(std::string_view s){
         int cnt{0};
@@ -120,6 +150,7 @@ private:
 
     mutable std::vector<std::string> params_;
     mutable std::vector<std::size_t> binders_;
+    // std::intger_sequece()
     mutable int cols{0};
     const   int mark_size_;
     std::string_view query_str_;
