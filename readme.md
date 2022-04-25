@@ -46,6 +46,6 @@ query<static_str,Result<>>
 ```
 
 
-column->row(递归类) -> index->schema(结果集)
+column->row(递归类)->schema(结果集)
 
 query<command_str,schema>
