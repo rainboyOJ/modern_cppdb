@@ -9,7 +9,6 @@
 #include "connection_info.hpp"
 #include "backend/mysql_backend.hpp"
 #include "backend/result_backend.hpp"
-#include "connection.hpp"
 
 namespace cppdb {
 
@@ -21,7 +20,7 @@ namespace cppdb {
 
 class pool : public std::enable_shared_from_this<pool>{
 
-    using T = connection;
+    using T = cppdb::backend::connection;
 
 private:
 
@@ -34,18 +33,29 @@ public:
 
     struct connection_raii {
         connection_raii(std::shared_ptr<pool> pool_,std::shared_ptr<T> conn_) 
-            : pool_{pool_} ,conn_{conn_} 
+            : pool_{pool_} ,conn_{conn_},last_used{std::chrono::system_clock::now()}
         {}
+
         ~ connection_raii(){
             if(!pool_.expired()){
-                pool_.lock()->put(conn_);
+                if(conn_ != nullptr)
+                    pool_.lock()->put(conn_);
             }
         }
-        inline auto conn() { return conn_->conn(); }
+
+        inline auto get_last_used() const{ return  last_used; }
+
+        auto conn() { return conn_; }
         auto escape(std::string_view str) { return conn_->escape(str);}
-        auto exec(std::string_view cmd) {return  conn_ -> exec(cmd);}
-        std::shared_ptr<T> conn_;
+        auto exec(std::string_view cmd) {
+            conn_ -> exec(cmd);
+            return std::make_shared<backend::result>(conn_.get());
+        }
+
         std::weak_ptr<pool> pool_;
+        std::shared_ptr<T> conn_ = nullptr;
+        std::chrono::time_point<std::chrono::system_clock> last_used;
+
     };
 
     pool(connection_info const &ci)
@@ -62,32 +72,30 @@ public:
 
     static std::shared_ptr<pool> create(const std::string& connection_string) {
         connection_info ci(connection_string);
-        return std::make_shared<pool>(ci);
-    }
+        return std::make_shared<pool>(ci); }
 
     ~pool() {}
 
     //@desc 打开一个连接, 要么从池里拿出一个 或 创建一个新
-    std::unique_ptr<connection_raii> open()
+    std::shared_ptr<connection_raii> open()
     {
         log("pool -> open() ");
         if(limit_ == 0){
             auto conn_ = std::make_shared<T>(ci_);
-            return std::make_unique<connection_raii>(
+            return std::make_shared<connection_raii>(
                     this->shared_from_this(),
                     conn_);
         }
         auto p = get();
         if( !p ) {
             log("pool : not get exits connection,creat new one");
-            p = std::make_shared<T>(ci_);
-            return std::make_unique<connection_raii>(
+            auto new_ = std::make_shared<T>(ci_);
+            return std::make_shared<connection_raii>(
                     this->shared_from_this(),
-                    p);
+                    new_
+                    );
         }
-        return std::make_unique<connection_raii>(
-                this->shared_from_this(),
-                p);
+        return p;
     }
 
     //@desc 收回长时间不用的连接
@@ -124,7 +132,9 @@ public:
                 else break; //后面的都比较新
             }
             if( c_in ) {
-                pool_.push_back(c_in);
+                pool_.push_back( 
+                        std::make_shared<connection_raii>(this->shared_from_this(),c_in)
+                        );
                 size_++;
             }
 
@@ -139,9 +149,9 @@ public:
     auto size() const { return size_; }
 
 private:
-    std::shared_ptr<T> get() {
+    std::shared_ptr<connection_raii> get() {
         if( limit_ == 0 ) 
-            return std::shared_ptr<T>(nullptr);
+            return std::shared_ptr<connection_raii>(nullptr);
         auto now = std::chrono::system_clock::now();
         {
             std::lock_guard<std::mutex> lck(mtx_);
@@ -164,7 +174,7 @@ private:
                 return c;
             }
         }
-        return std::shared_ptr<T>(nullptr); //没有找到
+        return std::shared_ptr<connection_raii>(nullptr); //没有找到
     }
 
     std::size_t limit_; // 上限
@@ -173,7 +183,7 @@ private:
     connection_info ci_;
     std::mutex mtx_;
 
-    using pool_type = std::list<std::shared_ptr<connection>>;
+    using pool_type = std::list<std::shared_ptr<connection_raii> >;
     pool_type pool_;
 };
 

@@ -248,7 +248,7 @@ private:
     std::string params_[mark_size_];
     int cols{0}; //当前存的数据的行数
 
-    std::unique_ptr<pool::connection_raii> conn_{nullptr};
+    std::shared_ptr<pool::connection_raii> conn_{nullptr};
 
 };
 

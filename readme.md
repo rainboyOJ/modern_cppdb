@@ -38,7 +38,7 @@ query<static_str,Result<>>
                                     │    │                           ┌──────────────────────┐
                                     │    │                           │                      │
                                     ▼    │                           │ backend::connection  │
-                                   connect_class ───────────────────►│                      │
+                                 connection_raii ───────────────────►│                      │
                                                     encapsulate      │                      │
                                                                      │ backend::result      │
                                                                      │                      │

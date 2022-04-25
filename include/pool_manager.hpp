@@ -25,7 +25,7 @@ private:
         return _pm;
     }
 
-    std::unique_ptr<pool::connection_raii> conn_() {
+    std::shared_ptr<pool::connection_raii> conn_() {
         if( pool_ != nullptr)
             return pool_->open();
         else throw cppdb::cppdb_error("should init pool_manager with init()");
