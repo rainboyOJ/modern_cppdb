@@ -1,6 +1,6 @@
 ## Intro
 
-rewirte [CppDB: CppDB - SQL Connectivity Library](http://cppcms.com/sql/cppdb/index.html) use cpp++17
+rewirte [CppDB: CppDB - SQL Connectivity Library](http://cppcms.com/sql/cppdb/index.html) use cpp++20( use Literals class as Template Parameters)
 
 
 

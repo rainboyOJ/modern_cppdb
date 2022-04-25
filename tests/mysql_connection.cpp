@@ -30,7 +30,8 @@ int main(){
         std::cout << "next row not exists" << std::endl;
         return 0 ;
     }
-    auto [succ,num] = myresult.fetch<int>(0);
+    bool succ;
+    auto num = myresult.fetch<int>(0,succ);
     if( succ)
         std::cout << "get value success : "  << num << std::endl;
     else

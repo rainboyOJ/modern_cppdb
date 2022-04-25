@@ -25,6 +25,8 @@ public:
         return conn_;
     }
 
+    auto escape (std::string_view s) { return conn_->escape(s);}
+
     std::shared_ptr<backend::result> exec(std::string_view s){
         conn_->exec(s);
         return std::make_shared<backend::result>(conn_.get());

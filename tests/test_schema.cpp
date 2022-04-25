@@ -20,21 +20,6 @@ void print(const T & a){
     //}
 }
 
-template<typename Row,typename Func,std::size_t... idx>
-constexpr void __each_row_column(Row& r,Func&& f,
-        std::index_sequence<idx...>) 
-{
-    (std::forward<Func>(f)(idx,r,typename sql::row_element<idx,Row>::type {}),... );
-}
-
-template<typename Row,typename Func>
-constexpr void each_row_column(Row& r,Func&& f)
-{
-    __each_row_column(r, std::forward<Func>(f),
-            std::make_index_sequence<Row::depth> {}
-            );
-}
-
 template<typename Row,cexpr::string Name,typename Type>
 void do_work(std::size_t idx,Row & r,sql::column<Name, Type> ){
     using Col = sql::column<Name, Type>;
@@ -64,6 +49,7 @@ int main(){
         sql::column<"std::string",std::string>,
         sql::column<"hello",double>
     >::row_type ;
+
     RowType row1;
     std::cout << GET_TYPE_NAME(row1) << std::endl;
     // 2.set value
@@ -71,7 +57,9 @@ int main(){
     // 3.get value
     int v = sql::get<"internal">(row1);
     // 4. print allow value
+    //
     std::cout << "get value from row1 : " << v << std::endl;
+
 
 
     RowType row2(1,'c',"hello",1.23);
@@ -92,8 +80,6 @@ int main(){
     ColType::type  t1 = 100;
     std::cout  << std::endl;
 
-    std::cout << "\n\n\n\n";
-    each_row_column(row2,[](auto a,auto&b,auto c) { do_work(a, b, c); });
     std::cout << "\n\n\n\n";
 
 
@@ -121,16 +107,16 @@ int main(){
 
     books::row_type book_row;
 
-    each_row_column(book_row, [](auto idx,auto &r,auto c){
-        if constexpr ( std::is_same_v<typename decltype(c)::type, uint64_t> ){
-            sql::set<decltype(c)::name>(r,123);
-            return;
-        }
-        if constexpr ( std::is_same_v<typename decltype(c)::type, std::string> ){
-            sql::set<decltype(c)::name>(r,"newbook123");
-            return;
-        }
-    });
+    //each_row_column(book_row, [](auto idx,auto &r,auto c){
+    //    if constexpr ( std::is_same_v<typename decltype(c)::type, uint64_t> ){
+    //        sql::set<decltype(c)::name>(r,123);
+    //        return;
+    //    }
+    //    if constexpr ( std::is_same_v<typename decltype(c)::type, std::string> ){
+    //        sql::set<decltype(c)::name>(r,"newbook123");
+    //        return;
+    //    }
+    //});
     std::cout << "book_row" << std::endl;
     std::cout << sql::get<0>(book_row) << std::endl;
     std::cout << sql::get<1>(book_row) << std::endl;

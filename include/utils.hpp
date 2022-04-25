@@ -14,6 +14,7 @@
 
 namespace cppdb {
 
+    using TIME_Pt_str = std::string;
     using TIME_Pt = std::chrono::time_point<std::chrono::system_clock>;
 
     /// \brief parse a string as time value.
@@ -53,7 +54,7 @@ namespace cppdb {
     std::tm parse_time(std::string const &v)
     {
         if(strlen(v.c_str())!=v.size())
-            throw bad_value_cast();
+            throw bad_value_cast(__FILE__,__LINE__);
         return parse_time(v.c_str());
     }
     std::tm parse_time(char const *v)
@@ -66,14 +67,15 @@ namespace cppdb {
             &t.tm_hour,&t.tm_min,&sec);
         if(n!=3 && n!=6) 
         {
-            throw bad_value_cast();
+            std::cout << v << std::endl;
+            throw bad_value_cast(__FILE__,__LINE__);
         }
         t.tm_year-=1900;
         t.tm_mon-=1;
         t.tm_isdst = -1;
         t.tm_sec=static_cast<int>(sec);
         if(mktime(&t)==-1)
-            throw bad_value_cast();
+            throw bad_value_cast(__FILE__,__LINE__);
         return t;
     }
 

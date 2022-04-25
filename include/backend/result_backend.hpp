@@ -40,7 +40,47 @@ public:
 
     //从col列得到一个数据
     template<typename T>
-    auto fetch(int col) -> std::tuple<bool,T>;
+    requires std::numeric_limits<T>::is_integer || std::is_pointer_v<T>
+    auto fetch(int col,bool & succ) -> T {
+        std::stringstream ss(at(col));
+        T t{};
+        if( ss >> t ){
+            succ = true;
+            return t;
+        }
+        succ = false;
+        return T{};
+    }
+
+    template<typename T>
+    requires std::is_same_v<T, std::string>
+    auto fetch(int col,bool & succ) -> T {
+        //字符串
+        int len;
+        char const *s = at(col,len);
+        if(!s) {
+            succ = false;
+            return T{};
+        }
+        succ = true;
+        std::string ret(s,len);
+        return ret;
+    }
+
+    template<typename T>
+    requires std::is_same_v<T, TIME_Pt>
+    auto fetch(int col,bool & succ) -> T {
+        //时间
+        char const *s = at(col);
+        if(!s) {
+            succ=false;
+            return T{};
+        }
+        std::tm tm_ = parse_time(s);
+        auto tim_ = std::chrono::system_clock::from_time_t(std::mktime(&tm_));
+        succ = true;
+        return tim_;
+    }
 
     // col列是否是null
     bool is_null(int col);
@@ -131,41 +171,42 @@ char const * result::at(int col,int &len)
     return row_[col];
 }
 
-template<typename T>
-auto result::fetch(int col) -> std::tuple<bool,T>
-{
-    //数字
-    if constexpr( std::is_integral_v<T> || std::is_floating_point_v<T>  ){
-        std::stringstream ss(at(col));
-        T t;
-        if( ss >> t )
-            return std::make_tuple(true,t);
-        else
-            return std::make_tuple(false,t);
-    }
 
-    //字符串
-    if constexpr( std::is_same_v<T, std::string> ){
-        int len;
-        char const *s = at(col,len);
-        if(!s)
-            return std::make_tuple<bool,T>(false,"");
-        std::string ret(s,len);
-        return std::make_tuple(false,std::move(s));
-    }
+//template<typename T>
+//auto result::fetch(int col,bool & succ) -> T
+//{
+    ////数字
+    //if constexpr( std::is_integral_v<T> || std::is_floating_point_v<T>  ){
+    //}
 
-    //时间
-    if constexpr (std::is_same_v<T, TIME_Pt >){
-        char const *s = at(col);
-        if(!s)
-            return std::make_tuple<bool,T>(false,{});
-        std::tm tm_ = parse_time(s);
-        auto tim_ = std::chrono::system_clock::from_time_t(std::mktime(&tm_));
-        return std::make_tuple(true,tim_);
-    }
+    ////字符串
+    //if constexpr( std::is_same_v<T, std::string> ){
+        //int len;
+        //char const *s = at(col,len);
+        //if(!s) {
+            //succ = false;
+            //return T{};
+        //}
+        //succ = true;
+        //std::string ret(s,len);
+        //return ret;
+    //}
 
-    throw cppdb_error(std::string("unsupport type :") + GET_TYPE_NAME(T) );
-}
+    ////时间
+    //if constexpr (std::is_same_v<T, TIME_Pt >){
+        //char const *s = at(col);
+        //if(!s) {
+            //succ=false;
+            //return T{};
+        //}
+        //std::tm tm_ = parse_time(s);
+        //auto tim_ = std::chrono::system_clock::from_time_t(std::mktime(&tm_));
+        //succ = true;
+        //return tim_;
+    //}
+
+    //throw cppdb_error(std::string("unsupport type : ") + GET_TYPE_NAME(T) + ",at col : " + std::to_string(col));
+//}
 
 int
 result::cols() const

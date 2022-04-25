@@ -19,7 +19,7 @@ namespace cppdb {
     ///
     class bad_value_cast : public cppdb_error {
     public:
-        bad_value_cast() : cppdb_error("cppdb::bad_value_cast can't convert data")
+        bad_value_cast(std::string const& file,std::size_t line) : cppdb_error("cppdb::bad_value_cast can't convert data at file :" + file + " ,line : " + std::to_string(line))
         {}
     };
 

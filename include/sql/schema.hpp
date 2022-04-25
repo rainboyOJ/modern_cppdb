@@ -25,6 +25,12 @@ namespace cppdb
         using const_iterator = typename container::const_iterator;
         
         schema() = default;
+        schema(schema&& sch): table_{std::move(sch.table_)}
+        {}
+
+        void operator=(schema && sch ) {
+            table_ = std::move(sch.table_);
+        }
 
         template <typename Type, typename... Types>
         schema(std::vector<Type> const& col, Types const&... cols) : schema{}

@@ -42,6 +42,8 @@ public:
             }
         }
         inline auto conn() { return conn_->conn(); }
+        auto escape(std::string_view str) { return conn_->escape(str);}
+        auto exec(std::string_view cmd) {return  conn_ -> exec(cmd);}
         std::shared_ptr<T> conn_;
         std::weak_ptr<pool> pool_;
     };

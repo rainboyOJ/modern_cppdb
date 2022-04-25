@@ -128,17 +128,19 @@ namespace cppdb
         }
     }
 
-    template <typename Row, typename Type>
-    bool set(Row &r,std::size_t index,Type const & value,
-            std::size_t total_size = Row::depth
-            ){
-        int now_ = total_size - (Row::depth);
-        if( Row::depth == 0) return false;
-        if (now_ == index){
+    template <std::size_t Pos, typename Row, typename Type>
+    constexpr void set(Row& r, Type const& value)
+    {
+        static_assert(!std::is_same_v<Row, cppdb::void_row>, "Name does not match a column name.");
+
+        if constexpr (Pos == 0)
+        {
             r.head() = value;
-            return true;
         }
-        set(r.tail(),value,total_size);
+        else
+        {
+            set<Pos-1>(r.tail(), value);
+        }
     }
 
     template <size_t Index, typename>
@@ -170,7 +172,9 @@ namespace std
     template <size_t Index, typename Col, typename Next>
     struct tuple_element<Index, cppdb::row<Col, Next>>
     {
-        using type = decltype(cppdb::get<Index>(cppdb::row<Col, Next>{}));
+        //using type = decltype(cppdb::get<Index>(cppdb::row<Col, Next>{}));
+        using TTT  =  cppdb::row_element<Index, cppdb::row<Col,Next>>;
+        using type = typename TTT::type::type;
     };
 
 
@@ -194,6 +198,24 @@ struct is_row {
 
     static constexpr bool value =  decltype(check(std::declval<T>()))::value;
 };
+
+//工具函数 目的,依次设置值
+template<typename Row,typename Func,std::size_t... idx>
+constexpr void __each_row_column(Row& r,Func&& f,
+        std::index_sequence<idx...>) 
+{
+    //(std::forward<Func>(f)(idx,r,typename std::tuple_element<idx,Row>::type {}),... );
+    //调用set 依次设置值
+    (cppdb::set<idx>(r, f(idx,typename std::tuple_element<idx,Row>::type {})),...);
+}
+
+//template<typename Row,typename Func>
+//constexpr void each_row_column(Row& r,Func&& f)
+//{
+    //__each_row_column(r, std::forward<Func>(f),
+            //std::make_index_sequence<Row::depth> {}
+            //);
+//}
 
 
 }// namespace sql 

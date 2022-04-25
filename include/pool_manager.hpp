@@ -11,20 +11,24 @@ class pool_manager {
 
 public:
     static auto get() {
-        static pool_manager _pm;
-        return _pm.conn_();
+        return Inst().conn_();
     }
 
-    void init(std::string const & conn_str){
-        pool_ = pool::create(conn_str);
+    static void init(std::string const & conn_str){
+        Inst().pool_ = pool::create(conn_str);
     }
 
 private:
 
+    static pool_manager & Inst() {
+        static pool_manager _pm;
+        return _pm;
+    }
+
     std::unique_ptr<pool::connection_raii> conn_() {
         if( pool_ != nullptr)
             return pool_->open();
-        else throw "should init pool_manager with init()";
+        else throw cppdb::cppdb_error("should init pool_manager with init()");
     }
 
     pool_manager() = default;
