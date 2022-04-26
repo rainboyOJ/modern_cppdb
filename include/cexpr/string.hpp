@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <type_traits>
 
 namespace cexpr
 {
@@ -160,5 +162,12 @@ namespace cexpr
     {
         return cstr != str;
     }
+
+
+    template<typename T>
+    struct is_cexpr_string : std::false_type {};
+    
+    template <typename Char, std::size_t N>
+    struct is_cexpr_string <cexpr::string<Char, N>> : std::true_type {};
 
 } // namespace cexpr

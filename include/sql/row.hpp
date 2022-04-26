@@ -80,6 +80,11 @@ namespace cppdb
         using row_type = row<Col, decltype(resolve())>;
     };
 
+    template<typename... Cols>
+    using row_type = typename cppdb::variadic_row<Cols...>::row_type;
+
+
+
     // user function to query row elements by column name
     template <cexpr::string Name, typename Row>
     constexpr auto const& get(Row const& r) noexcept
@@ -182,22 +187,33 @@ namespace std
 
 namespace cppdb {
 
-// 是否是row 类型
 template<typename T>
-struct is_row {
+struct is_row_type : public std::false_type {};
 
-    template<typename Col,typename Next>
-    static constexpr auto check(row<Col, Next> _row) {
-        if constexpr (std::is_same_v<Next, void_row>)
-            return std::true_type{};
-        return check(std::declval<Next>());
-    } 
+// 是否是row 类型
+template<>
+struct is_row_type<cppdb::void_row> : public std::true_type{};
 
-    template<typename Col,typename Next>
-    static constexpr auto check(...) -> std::false_type ;
-
-    static constexpr bool value =  decltype(check(std::declval<T>()))::value;
+template<typename Col,typename Next>
+struct is_row_type<cppdb::row<Col, Next>> {
+    static constexpr bool value = cppdb::is_row_type<Next>::value && cppdb::is_column_type<Col>::value;
 };
+
+
+//struct is_row_type {
+
+    //template<typename Col,typename Next>
+    //static constexpr auto check(row<Col, Next> _row) {
+        //if constexpr (std::is_same_v<Next, void_row>)
+            //return std::true_type{};
+        //return check(std::declval<Next>());
+    //} 
+
+    //template<typename Col,typename Next>
+    //static constexpr auto check(...) -> std::false_type ;
+
+    //static constexpr bool value =  decltype(check(std::declval<T>()))::value;
+//};
 
 //工具函数 目的,依次设置值
 template<typename Row,typename Func,std::size_t... idx>

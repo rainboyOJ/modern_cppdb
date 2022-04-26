@@ -1,7 +1,9 @@
 #pragma once
 
+#include <numeric>
 #include <array>
 #include <string>
+#include <chrono>
 #include <iostream>
 #include <string_view>
 #include <type_traits>
@@ -188,15 +190,27 @@ public:
         //}
 
 
+#ifdef DEBUG
         std::cout << GET_TYPE_NAME(TYPE) << std::endl;
         std::cout << "same v" << std::is_same_v<TYPE,char [8]> << std::endl;
         std::cout << "is_array_v " << std::is_array_v<TYPE> << std::endl;
         std::cout << "is_array_v " << std::is_array_v<Input> << std::endl;
         std::cout << std::convertible_to<TYPE,std::string> << std::endl;
+#endif
         throw std::invalid_argument(std::string("Do not supporte type: ") + GET_TYPE_NAME(Input));
     }
 
-    Schema exec() {
+    //需要返回的类型是一个数字或字符串,或时间 这种单个的例子
+    Schema exec() requires 
+        std::numeric_limits<Schema>::is_integer || 
+        std::is_pointer_v<Schema> ||
+        std::is_same_v<Schema, std::string> ||
+        std::is_same_v<Schema, TIME_Pt>
+    {
+
+    }
+
+    Schema exec(){
         if( cols != mark_size_)
             throw cppdb_error("must insert full value_ use << before exec ");
 
