@@ -165,4 +165,10 @@ namespace cppdb
     template <cexpr::string Name, typename... Cols>
     using Result = schema<Name,Cols...>;
 
+    template<typename T>
+    struct is_schema_type : public std::false_type {};
+
+    template <cexpr::string Name, typename... Cols>
+    struct is_schema_type<cppdb::schema<Name, Cols...>> : public std::true_type {};
+
 } // namespace cppdb

@@ -9,6 +9,10 @@ namespace cppdb {
     class cppdb_error : public std::runtime_error {
     public:
         cppdb_error(std::string const & v) : std::runtime_error{v} {}
+        cppdb_error(std::string const & file,std::size_t line,std::string const & v) 
+            : std::runtime_error{
+                "[" + file +"," + std::to_string(line) + "] : " + v
+            } {}
     };
     
     ///

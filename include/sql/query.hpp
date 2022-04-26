@@ -24,6 +24,18 @@ namespace cppdb
 struct __exec {};
 const constexpr auto exec = __exec();
 
+//std::intern
+
+//using fenc_grave        = std::integral_constant<char, '`'>;
+//using fenc_single_quote = std::integral_constant<char, '\''>;
+//using fenc_quote        = std::integral_constant<char, '"'>;
+
+
+enum fenc {
+    fenc_grave        =  '`',
+    fenc_single_quote =  '\'',
+    fenc_quote        =  '"'
+};
 
 template<std::size_t... As,std::size_t... Bs>
 constexpr auto operator+(std::index_sequence<As...>,std::index_sequence<Bs...>) 
@@ -122,12 +134,22 @@ public:
     template<typename Input>
     query& operator<<(Input && in) {
         bind(std::forward<Input>(in));
+        if( use_fenc ) {
+            at(cols-1) = fenc_char + at(cols) + fenc_char;
+            use_fenc = 0;
+        }
+
         return *this;
     }
 
     void reset(){
         cols = 0;
         for (auto& e : params_) e.clear();
+    }
+
+    query& operator<<( fenc __f) {
+        use_fenc = 1;
+        fenc_char = static_cast<char>(__f);
     }
 
     auto operator<<(__exec const &) {
@@ -163,10 +185,10 @@ public:
         {
             std::string &s = at(cols);
             s.clear();
-            s.reserve(30);
-            s+='\'';
-            s+=cppdb::format_time(in);
-            s+='\'';
+            //s.reserve(30);
+            //s+='\'';
+            s = cppdb::format_time(in);
+            //s+='\'';
             ++cols;
             return;
         }
@@ -179,9 +201,9 @@ public:
             //size_t len = mysql_real_escape_string(conn_,&buf.front(),b,e-b);
             std::string &s=at(cols);
             //s.reserve(e-b+2);
-            s+='\'';
-            s.append(std::string(in)); // C++ 20 
-            s+='\'';
+            //s+='\'';
+            s = std::string(in); // C++ 20 
+            //s+='\'';
             cols++;
             return;
         }
@@ -200,17 +222,7 @@ public:
         throw std::invalid_argument(std::string("Do not supporte type: ") + GET_TYPE_NAME(Input));
     }
 
-    //需要返回的类型是一个数字或字符串,或时间 这种单个的例子
-    Schema exec() requires 
-        std::numeric_limits<Schema>::is_integer || 
-        std::is_pointer_v<Schema> ||
-        std::is_same_v<Schema, std::string> ||
-        std::is_same_v<Schema, TIME_Pt>
-    {
-
-    }
-
-    Schema exec(){
+    inline std::string get_query() {
         if( cols != mark_size_)
             throw cppdb_error("must insert full value_ use << before exec ");
 
@@ -234,7 +246,41 @@ public:
 #ifdef DEBUG
         log("==>finish last query : ",last_query_);
 #endif
-        auto Result_set = conn_->exec(last_query_);
+        return last_query_;
+    }
+
+    //需要返回的类型是一个数字或字符串,或时间 这种单个的例子
+    Schema exec() requires 
+        std::numeric_limits<Schema>::is_integer || 
+        std::is_pointer_v<Schema> ||
+        std::is_same_v<Schema, std::string> ||
+        std::is_same_v<Schema, TIME_Pt>
+    {
+        auto Result_set = get_raw_result();
+        if( Result_set->has_next()  != backend::result::next_row_exists)
+            throw cppdb::cppdb_error(__FILE__,__LINE__,"not get value");
+        Result_set->next();
+        bool succ;
+        return Result_set -> template fetch<Schema>(0,succ);
+    }
+
+    Schema exec() 
+        requires cppdb::is_row_type<Schema>::value
+    {
+        auto Result_set = get_raw_result();
+        if( Result_set->has_next()  != backend::result::next_row_exists)
+            throw cppdb::cppdb_error(__FILE__,__LINE__,"not get value");
+        Schema myrow;
+        my_set_each_row_column(myrow, Result_set.get(), 
+                std::make_index_sequence<Schema::depth> {}
+                );
+        return myrow;
+    }
+
+    Schema exec()
+        requires cppdb::is_schema_type<Schema>::value
+    {
+        auto Result_set = get_raw_result();
         Schema real_result;
         //执行并填充结果
         while ( Result_set->has_next()  == backend::result::next_row_exists
@@ -251,6 +297,11 @@ public:
 
 
 private:
+
+    inline auto get_raw_result() {
+        auto last_query_ = get_query();
+        return conn_->exec(last_query_);
+    }
     //template<std::size_t idx,typename ValueType,typename Result>
     //auto fetch(Result res_conn) -> ValueType{
         //return res_conn->fetch<ValueType>(idx);
@@ -261,6 +312,8 @@ private:
     //std::array<std::string, mark_size_> params_;
     std::string params_[mark_size_];
     int cols{0}; //当前存的数据的行数
+    bool use_fenc{false};
+    char fenc_char;
 
     std::shared_ptr<pool::connection_raii> conn_{nullptr};
 
