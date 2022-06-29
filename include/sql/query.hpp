@@ -249,6 +249,14 @@ public:
         return last_query_;
     }
 
+    //不需要结果,只需要执行就可以了
+    Schema exec() requires 
+        std::is_same_v<Schema,void>
+    {
+        auto last_query_ = get_query();
+        conn_->onlyExec(last_query_);
+    }
+
     //需要返回的类型是一个数字或字符串,或时间 这种单个的例子
     Schema exec() requires 
         std::numeric_limits<Schema>::is_integer || 
@@ -282,10 +290,10 @@ public:
     {
         auto Result_set = get_raw_result();
         Schema real_result;
-        //执行并填充结果
-        while ( Result_set->has_next()  == backend::result::next_row_exists
-                ) {
 
+        //执行并填充结果
+        while ( Result_set->has_next()  == backend::result::next_row_exists) 
+        {
             Result_set->next();
             typename Schema::row_type row; // 定义一个新的row
             my_set_each_row_column(row, Result_set.get(), std::make_index_sequence<Schema::row_type::depth>{} );
@@ -298,7 +306,8 @@ public:
 
 private:
 
-    inline auto get_raw_result() {
+    inline auto get_raw_result() -> std::shared_ptr<backend::result>
+    {
         auto last_query_ = get_query();
         return conn_->exec(last_query_);
     }

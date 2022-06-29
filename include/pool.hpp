@@ -47,9 +47,14 @@ public:
 
         auto conn() { return conn_; }
         auto escape(std::string_view str) { return conn_->escape(str);}
-        auto exec(std::string_view cmd) {
+
+        std::shared_ptr<backend::result> exec(std::string_view cmd) {
             conn_ -> exec(cmd);
             return std::make_shared<backend::result>(conn_.get());
+        }
+
+        void onlyExec(std::string_view cmd) {
+            conn_ -> exec(cmd);
         }
 
         std::weak_ptr<pool> pool_;

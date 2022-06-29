@@ -31,6 +31,8 @@ execute_process(COMMAND mysql_config --libs
     OUTPUT_VARIABLE MYSQL_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 add_executable(example example.cpp)
+target_link_libraries(example pthread ${MYSQL_LIBS})
+target_compile_options(example PUBLIC ${MYSQL_CFLAGS})
 
 file(GLOB TESTS "tests/*.cpp")
 foreach(f ${TESTS})
