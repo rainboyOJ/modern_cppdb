@@ -107,7 +107,7 @@ result::result(MYSQL *conn) : res_(0), cols_(0), current_row_(0), row_(0)
     if(!res_) {
         cols_ = mysql_field_count(conn);
         if(cols_ == 0)
-            throw cppdb_error("Seems that the query does not produce any result");
+            throw cppdb_no_result(__FILE__,__LINE__);
     }
     else {
         cols_ = mysql_num_fields(res_);

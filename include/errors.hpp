@@ -14,6 +14,15 @@ namespace cppdb {
                 "[" + file +"," + std::to_string(line) + "] : " + v
             } {}
     };
+
+    /// \brief 没有结果的错误
+    class cppdb_no_result : public cppdb_error {
+    public:
+        cppdb_no_result(std::string const & file ,std::size_t line)
+            : cppdb_error(file,line,"cppdb_no_result : Seems that the query does not produce any result.")
+        {}
+
+    };
     
     ///
     /// \brief invalid data conversions
