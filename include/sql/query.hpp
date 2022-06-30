@@ -107,6 +107,7 @@ concept SQL_SUPPORT_TYPE =
     std::is_fundamental_v<TYPE> || 
     std::is_same_v<TYPE, char *> ||
     std::is_same_v<TYPE, TIME_Pt> ||
+    std::is_same_v<TYPE, std::string_view> ||
     std::convertible_to<TYPE, std::string>;
 
 /**
@@ -169,14 +170,25 @@ public:
     template<typename Input>
     requires SQL_SUPPORT_TYPE<Input>
     void bind(Input&& in) {
-        std::cout << in << std::endl;
-        std::cout << "col :" << cols << std::endl;
+        //std::cout << in << std::endl;
+        //std::cout << "col :" << cols << std::endl;
         //using TYPE = typename std::remove_const_t< std::remove_cv_t<Input> >;
         using TYPE = std::remove_cvref_t<Input>;
 
         if constexpr ( std::is_fundamental_v<TYPE> && (! std::is_same_v<TYPE, char *>)  ) // # 基础的类型
         {
             at(cols) = std::to_string(in);
+            ++cols;
+            return;
+        }
+        
+        if constexpr ( std::is_same_v<std::string_view, TYPE>) {
+            at(cols) = std::string(in);
+            ++cols;
+            return;
+        }
+        if constexpr ( std::is_same_v<std::string, TYPE>) {
+            at(cols) = in;
             ++cols;
             return;
         }
@@ -219,7 +231,7 @@ public:
         std::cout << "is_array_v " << std::is_array_v<Input> << std::endl;
         std::cout << std::convertible_to<TYPE,std::string> << std::endl;
 #endif
-        throw std::invalid_argument(std::string("Do not supporte type: ") + GET_TYPE_NAME(Input));
+        throw cppdb_error(__FILE__,__LINE__,std::string("Do not support type: ") + GET_TYPE_NAME(Input));
     }
 
     inline std::string get_query() {
