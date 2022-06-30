@@ -279,6 +279,7 @@ public:
         if( Result_set->has_next()  != backend::result::next_row_exists)
             throw cppdb::cppdb_error(__FILE__,__LINE__,"not get value");
         Schema myrow;
+        Result_set->next();
         my_set_each_row_column(myrow, Result_set.get(), 
                 std::make_index_sequence<Schema::depth> {}
                 );

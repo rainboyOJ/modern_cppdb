@@ -165,7 +165,7 @@ char const * result::at(int col,int &len)
     if(col < 0 || col >= cols_)
         throw invalid_column();
     unsigned long *lengths = mysql_fetch_lengths(res_);
-    if(lengths==0) 
+    if(lengths==NULL) 
         throw cppdb_error("Can't get length of column");
     len = lengths[col];
     return row_[col];
