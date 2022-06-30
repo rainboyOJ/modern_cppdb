@@ -188,9 +188,9 @@ private:
 std::mutex LOG::mtx_;
 
 #ifdef DEBUG
-    #define log(...) LOG::log(__FILE__,__LINE__,__VA_ARGS__)
+    #define cppdb_log(...) LOG::log(__FILE__,__LINE__,__VA_ARGS__)
 #else
-    #define log(...)
+    #define cppdb_log(...)
 #endif
 
 

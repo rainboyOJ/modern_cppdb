@@ -244,7 +244,7 @@ public:
         if( pre_index < query_str_.size())
             last_query_.append(query_str_.cbegin() + pre_index , query_str_.size() - pre_index);
 #ifdef DEBUG
-        log("==>finish last query : ",last_query_);
+        cppdb_log("==>finish last query : ",last_query_);
 #endif
         return last_query_;
     }

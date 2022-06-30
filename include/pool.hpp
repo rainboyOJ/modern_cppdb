@@ -84,7 +84,7 @@ public:
     //@desc 打开一个连接, 要么从池里拿出一个 或 创建一个新
     std::shared_ptr<connection_raii> open()
     {
-        log("pool -> open() ");
+        cppdb_log("pool -> open() ");
         if(limit_ == 0){
             auto conn_ = std::make_shared<T>(ci_);
             return std::make_shared<connection_raii>(
@@ -93,7 +93,7 @@ public:
         }
         auto p = get();
         if( !p ) {
-            log("pool : not get exits connection,creat new one");
+            cppdb_log("pool : not get exits connection,creat new one");
             auto new_ = std::make_shared<T>(ci_);
             return std::make_shared<connection_raii>(
                     this->shared_from_this(),
@@ -118,7 +118,7 @@ public:
     //放回
     void put(std::shared_ptr<T> c_in) 
     {
-        log("pool -> put()");
+        cppdb_log("pool -> put()");
         if( limit_ == 0 ) return;
 
         {
