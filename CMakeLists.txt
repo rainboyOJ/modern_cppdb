@@ -20,7 +20,7 @@ add_definitions(
 set(CMAKE_CXX_FLAGS "-std=c++20 -g")
 
 # 设置宏
-add_definitions(-D DEBUG)
+add_definitions(-DMODERN_CPPDB_DEBUG)
 
 # 指定include 的头文件的位置
 include_directories(include)

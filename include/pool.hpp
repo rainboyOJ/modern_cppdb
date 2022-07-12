@@ -13,7 +13,6 @@
 namespace cppdb {
 
 
-
 //==========================
 //==========================
 //==========================
@@ -27,7 +26,6 @@ private:
     pool() = delete;
     pool(pool const &) = delete;
     void operator=(pool const &) = delete;
-
 
 public:
 

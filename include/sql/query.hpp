@@ -224,7 +224,7 @@ public:
         //}
 
 
-#ifdef DEBUG
+#ifdef MODERN_CPPDB_DEBUG
         std::cout << GET_TYPE_NAME(TYPE) << std::endl;
         std::cout << "same v" << std::is_same_v<TYPE,char [8]> << std::endl;
         std::cout << "is_array_v " << std::is_array_v<TYPE> << std::endl;
