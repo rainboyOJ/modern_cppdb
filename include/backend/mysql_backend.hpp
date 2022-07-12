@@ -200,12 +200,12 @@ public:
         return "mysql"sv;
     }
 
-
-private:
-
     MYSQL * get_raw_conn() const{
         return conn_;
     }
+
+private:
+
 
     /// Set a custom MYSQL option on the connection.
     void mysql_set_option(mysql_option option, const void* arg)

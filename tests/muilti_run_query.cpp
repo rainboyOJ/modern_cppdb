@@ -12,18 +12,19 @@ int main(){
 
     for(int i = 1 ;i <= 10;i++) {
         std::cout << ">>>>>>>>>>>>>>>>>> run :" << i << std::endl;
-        //行 接收一行的信息
+        //执行命令,但不接受反回信息
         using boysRow = 
             cppdb::row_type<
                 cppdb::column<"boyName", std::string>,
                 cppdb::column<"userCP", int>
                 >;
-        cppdb::query<"select boyName,userCP from boys;", boysRow> q_row;
+        cppdb::query<"select boyName,userCP from boys;", void> q_row;
 
-        boysRow boyrow_1 = q_row << cppdb::exec;
+        //boysRow boyrow_1 = 
+            q_row << cppdb::exec;
         //输出
-        std::cout << cppdb::get<"boyName",boysRow>(boyrow_1) << std::endl;
-        std::cout << cppdb::get<"userCP",boysRow>(boyrow_1) << std::endl;
+        //std::cout << cppdb::get<"boyName",boysRow>(boyrow_1) << std::endl;
+        //std::cout << cppdb::get<"userCP",boysRow>(boyrow_1) << std::endl;
     }
 
 

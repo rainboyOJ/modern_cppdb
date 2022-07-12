@@ -29,6 +29,10 @@ private:
 
 public:
 
+    /**
+     * 从pool中获取的连接类型,
+     * 当生命周期结束时可以自动的释放 mysql conn 回到 pool 里
+     */
     struct connection_raii {
         connection_raii(std::shared_ptr<pool> pool_,std::shared_ptr<T> conn_) 
             : pool_{pool_} ,conn_{conn_},last_used{std::chrono::system_clock::now()}
@@ -52,7 +56,11 @@ public:
         }
 
         void onlyExec(std::string_view cmd) {
-            conn_ -> exec(cmd);
+            conn_ -> exec(cmd); // ref https://dev.mysql.com/doc/refman/8.0/en/commands-out-of-sync.html
+            // 不可以只执行qeury,但不store结果
+            auto res_ = mysql_store_result(conn_.get()->get_raw_conn());
+            if(res_)
+                mysql_free_result(res_);
         }
 
         std::weak_ptr<pool> pool_;
