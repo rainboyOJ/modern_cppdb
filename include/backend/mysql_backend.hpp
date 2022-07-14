@@ -19,7 +19,9 @@ public:
         :connection(connection_info(str))
     {}
 
-    connection(connection_info const &ci) : conn_(0)
+    connection(connection_info const &ci) : 
+        conn_(0),
+        last_used{std::chrono::system_clock::now()}
     {
         conn_ = mysql_init(0);
         if(!conn_) {
@@ -160,6 +162,7 @@ public:
             mysql_close(conn_);
             throw cppdb_error(err);
         }
+
     }
 
     ~connection()
@@ -167,6 +170,9 @@ public:
         if(conn_)
             mysql_close(conn_);
     }
+
+    inline void update_last_used()  { last_used = std::chrono::system_clock::now(); }
+    inline auto get_last_used() const{ return  last_used; }
 
     void exec(std::string_view s) 
     {
@@ -218,6 +224,7 @@ private:
 
     connection_info ci_;
     MYSQL *conn_;
+    std::chrono::time_point<std::chrono::system_clock> last_used;
 };
 
 } // end namespace backend

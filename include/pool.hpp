@@ -35,17 +35,25 @@ public:
      */
     struct connection_raii {
         connection_raii(std::shared_ptr<pool> pool_,std::shared_ptr<T> conn_) 
-            : pool_{pool_} ,conn_{conn_},last_used{std::chrono::system_clock::now()}
+            : pool_{pool_} ,conn_{conn_}
         {}
 
         ~ connection_raii(){
             if(!pool_.expired()){
-                if(conn_ != nullptr)
-                    pool_.lock()->put(conn_);
+                if(conn_ != nullptr){
+                    if( auto pool_ptr = pool_.lock(); pool_ptr) {
+                        conn_->update_last_used();
+                        pool_ptr->put(conn_);
+                    }
+                }
             }
         }
 
-        inline auto get_last_used() const{ return  last_used; }
+        inline auto get_last_used() const{ 
+            if( conn_ == 0)
+                throw cppdb::cppdb_error("conn_ is nullptr!");
+            return  conn_ -> get_last_used(); 
+        }
 
         auto conn() { return conn_; }
         auto escape(std::string_view str) { return conn_->escape(str);}
@@ -65,15 +73,14 @@ public:
 
         std::weak_ptr<pool> pool_;
         std::shared_ptr<T> conn_ = nullptr;
-        std::chrono::time_point<std::chrono::system_clock> last_used;
 
     };
 
     pool(connection_info const &ci)
         :limit_{0},life_time_{0},size_{0},ci_{ci}
     {
-        limit_     = ci_.get("@pool_size",16);
-        life_time_ = std::chrono::seconds( ci_.get("@pool_max_idle",600));
+        limit_     = ci_.get("pool_size",16);
+        life_time_ = std::chrono::seconds( ci_.get("pool_max_idle",600));
     }
     using pointer = std::shared_ptr<pool>;
 
@@ -125,6 +132,7 @@ public:
     void put(std::shared_ptr<T> c_in) 
     {
         cppdb_log("pool -> put()");
+        cppdb_log("life_time_ :",life_time_.count());
         if( limit_ == 0 ) return;
 
         {
@@ -138,14 +146,14 @@ public:
                     tmp = p;
                     ++p;
                     pool_.erase(tmp);
+                    //cppdb_log("del one expired connection");
                     size_--;
                 }
                 else break; //后面的都比较新
             }
+            //cppdb_log("del expired connection end");
             if( c_in ) {
-                pool_.push_back( 
-                        std::make_shared<connection_raii>(this->shared_from_this(),c_in)
-                        );
+                pool_.push_back( c_in);
                 size_++;
             }
 
@@ -154,6 +162,8 @@ public:
                 size_--;
             }
         }
+
+        cppdb_log("pool -> put() end;");
     }
 
     //得到可用连接的数量, 不是线程安全的
@@ -179,10 +189,10 @@ private:
                 else break;
             }
             if( !pool_.empty() ) {
-                auto c = pool_.front();
+                std::shared_ptr<T> c = pool_.front();
                 pool_.pop_front();
                 size_--;
-                return c;
+                return std::make_shared<connection_raii>( this->shared_from_this(), c);
             }
         }
         return std::shared_ptr<connection_raii>(nullptr); //没有找到
@@ -194,7 +204,7 @@ private:
     connection_info ci_;
     std::mutex mtx_;
 
-    using pool_type = std::list<std::shared_ptr<connection_raii> >;
+    using pool_type = std::list<std::shared_ptr<T> >;
     pool_type pool_;
 };
 
