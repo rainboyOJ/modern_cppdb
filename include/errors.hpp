@@ -15,10 +15,23 @@ namespace cppdb {
             } {}
     };
 
-    /// \brief 没有结果的错误
-    class cppdb_no_result : public cppdb_error {
+    /**
+     * 返回的结果0行数据
+     */
+    class cppdb_zero_row: public cppdb_error {
     public:
-        cppdb_no_result(std::string const & file ,std::size_t line)
+        cppdb_zero_row(std::string const & file ,std::size_t line)
+            : cppdb_error(file,line,"cppdb_no_result : Seems that the query does not produce any result.")
+        {}
+
+    };
+
+    /**
+     * 发现 MYSQL_RES * 里没有 列
+     */
+    class cppdb_zero_filed: public cppdb_error {
+    public:
+        cppdb_zero_filed(std::string const & file ,std::size_t line)
             : cppdb_error(file,line,"cppdb_no_result : Seems that the query does not produce any result.")
         {}
 

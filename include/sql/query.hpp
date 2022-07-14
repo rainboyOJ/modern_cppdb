@@ -278,7 +278,8 @@ public:
     {
         auto Result_set = get_raw_result();
         if( Result_set->has_next()  != backend::result::next_row_exists)
-            throw cppdb::cppdb_error(__FILE__,__LINE__,"not get value");
+            //throw cppdb::cppdb_error(__FILE__,__LINE__,"not get value");
+            throw cppdb::cppdb_zero_row(__FILE__,__LINE__);
         Result_set->next();
         bool succ;
         return Result_set -> template fetch<Schema>(0,succ);
