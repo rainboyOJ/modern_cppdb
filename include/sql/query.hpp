@@ -243,7 +243,7 @@ public:
         std::string last_query_{};
         if constexpr(mark_size_ != 0) {
         __each_seq([this,&pre_index,&last_query_](std::size_t now_index,std::size_t col){
-                    std::cout << pre_index << " " << now_index << std::endl;
+                    //std::cout << pre_index << " " << now_index << std::endl;
                     last_query_.append(query_str_.cbegin() + pre_index,now_index-pre_index);
                     last_query_.append(params_[col]);
                     pre_index = now_index+1;
