@@ -171,3 +171,16 @@ namespace cexpr
     struct is_cexpr_string <cexpr::string<Char, N>> : std::true_type {};
 
 } // namespace cexpr
+  //
+
+//增加功能
+namespace std {
+    // std::string += cexpr::string
+    template <typename Char, std::size_t N>
+    std::string& operator+=(std::string & str,cexpr::string<Char,N> const & cstr) {
+        for(int i =0;i<cstr.size_;i++) {
+            str += cstr.string_[i];
+        }
+        return str;
+    }
+}
