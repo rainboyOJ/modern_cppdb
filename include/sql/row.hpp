@@ -148,13 +148,13 @@ namespace cppdb
         }
     }
 
-    template <size_t Index, typename>
+    template <std::size_t Index, typename>
     struct row_element;
 
-    template <size_t Index, typename Col, typename Next>
+    template <std::size_t Index, typename Col, typename Next>
     struct row_element<Index,cppdb::row<Col,Next>> 
     {
-        template<size_t Pos,typename Col_, typename Next_>
+        template<std::size_t Pos,typename Col_, typename Next_>
         static constexpr auto __type(cppdb::row<Col_,Next_>) {
             if constexpr (Pos == 0)
                 return Col_{};
@@ -171,10 +171,10 @@ namespace std
 {
 
     template <typename Col, typename Next>
-    class tuple_size<cppdb::row<Col, Next>> : public integral_constant<size_t, cppdb::row<Col, Next>::depth>
+    class tuple_size<cppdb::row<Col, Next>> : public integral_constant<std::size_t, cppdb::row<Col, Next>::depth>
     {};
 
-    template <size_t Index, typename Col, typename Next>
+    template <std::size_t Index, typename Col, typename Next>
     struct tuple_element<Index, cppdb::row<Col, Next>>
     {
         //using type = decltype(cppdb::get<Index>(cppdb::row<Col, Next>{}));
